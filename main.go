@@ -103,10 +103,10 @@ func (g *Game) Update() error {
 }
 
 func (p *Paddle) MoveOnKeyPress() {
-	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) && p.Y + p.H < screenHeight {
 		p.Y += paddleSpeed
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) && p.Y > 0 {
 		p.Y -= paddleSpeed
 	}
 }
@@ -124,23 +124,36 @@ func (g *Game) Reset() {
 }
 
 func (g *Game) CollideWithWall() {
-	if g.ball.X >= screenWidth {
+	if g.ball.X + g.ball.W >= screenWidth {
 		g.Reset()
-	} else if g.ball.X <= 0 {
+	}
+
+	if g.ball.X <= 0 {
+		g.ball.X = 0
 		g.ball.dxdt = ballSpeed
-	} else if g.ball.Y <= 0 {
+	}
+
+	if g.ball.Y <= 0 {
+		g.ball.Y = 0
 		g.ball.dydt = ballSpeed
-	} else if g.ball.Y >= screenHeight {
+	}
+
+	if g.ball.Y + g.ball.H >= screenHeight {
+		g.ball.Y = screenHeight - g.ball.H
 		g.ball.dydt = -ballSpeed
 	}
 }
 
 func (g *Game) CollideWithPaddle() {
-	if g.ball.X >= g.paddle.X && g.ball.Y >= g.paddle.Y && g.ball.Y <= g.paddle.Y + g.paddle.H {
-		g.ball.dxdt = -g.ball.dxdt
-		g.score++
-		if g.score > g.highScore {
-			g.highScore = g.score
-		}
-	}
+    if g.ball.X < g.paddle.X + g.paddle.W &&
+			g.ball.X + g.ball.W > g.paddle.X &&
+      g.ball.Y < g.paddle.Y + g.paddle.H &&
+      g.ball.Y + g.ball.H > g.paddle.Y {
+				g.ball.X = g.paddle.X - g.ball.W
+        g.ball.dxdt = -g.ball.dxdt
+        g.score++
+        if g.score > g.highScore {
+					g.highScore = g.score
+        }
+    }
 }
